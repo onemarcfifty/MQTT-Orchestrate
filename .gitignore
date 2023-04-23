@@ -1,0 +1,6 @@
+playbook
+global.config
+marc/*
+group1/global.config
+group2/global.config
+test.txt

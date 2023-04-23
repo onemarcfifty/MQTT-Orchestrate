@@ -1,0 +1,38 @@
+---
+- name: Distribute and run client script
+  hosts: group1:group2
+  gather_facts: false
+
+  tasks:
+    - name: Copy client specific functions to remote hosts
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/{{ group_names[0] }}/functions.sh"
+        dest: /tmp/functions.sh
+        mode: "u+x"
+      delegate_to: localhost
+
+    - name: Copy client script to remote hosts
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/clientscript.sh"
+        dest: /tmp/clientscript.sh
+        mode: "u+x"
+      delegate_to: localhost
+
+    - name: Copy global config to remote hosts
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/global.config"
+        dest: /tmp/global.config
+        mode: "u+x"
+      delegate_to: localhost
+
+    - name: Install necessary software
+      ansible.builtin.apt:
+        name: mosquitto-clients
+        update_cache: true
+
+    - name: Run client script on remote hosts
+      ansible.builtin.shell: nohup clientscript.sh >/dev/null 2>&1 &
+      delegate_to: "{{ inventory_hostname }}"
+      args:
+        chdir: /tmp
+      changed_when: true
