@@ -1,19 +1,23 @@
-# WAITFOR node3 ALIVE
+# Sample Playbook
+# we wait for Nodes node1 and node2
 WAITFOR node1 ALIVE
 WAITFOR node2 ALIVE
-SEND node2 START 5201
-# SEND node2 START 5202
-SEND node1 START 127.0.0.1 5201 2 3
-# SEND node3 START 127.0.0.1 5202 5 3
-WAIT 4
+# now we start iperf3 on node1 in Server mode
+# and on node2 in client mode for 5 secs
+SEND node1 START SERVER 5201
+SEND node2 START 127.0.0.1 5201 5 3
+WAIT 7
+# now we stop the tasks on both nodes
 SEND node2 STOP
 WAITFOR node2 STOPPED
+SEND node1 STOP
+WAITFOR node1 STOPPED
+# let's instruct node1 to send us a file
 RECEIVE 6000 test.txt
-SEND node2 SENDFILE /tmp/mqttnode2.tmp 192.168.139.239 6000 NOTRUNCATE
+SEND node1 SENDFILE /tmp/iperf.5201.log 127.0.0.1 6000 TRUNCATE
 WAIT 2
+# and let's shut them down
 SEND node1 TERMINATE
 SEND node2 TERMINATE
-# SEND node3 TERMINATE
-WAITFOR node2 TERMINATED
 WAITFOR node1 TERMINATED
-# WAITFOR node3 TERMINATED
+WAITFOR node2 TERMINATED

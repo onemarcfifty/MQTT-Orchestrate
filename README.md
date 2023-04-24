@@ -43,6 +43,8 @@ cd MQTT-Orchestrate
 
 Ansible is great for automation. I use it to distribute files and/or software or to run backups etc. However, the use case here is to have tasks be started _synchronously_ (within the possible jitter of the mqtt subscribe which is below 100 ms in my case). The choice for MQTT was quickly made because I have it running already in my environment and it serves the purpose with no additional cost. Furthermore, mosquitto is very lightweight (the alternative solutions may use java or python etc...)
 
+Also - this Orchestrator does NOT require a direct network connection between the nodes, as long as they can reach the same MQTT Server! Very useful if you have them in different (V)LANs.
+
 ## Pre-requisites and requirements
 
 You need the following environment and/or software installed
@@ -50,4 +52,47 @@ You need the following environment and/or software installed
 - (optional) Ansible if you want to deploy using ansible-playbook
 - (required) an MQTT Server such as mosquitto
 - (required) mosquitto_sub and mosquitto_pub to communicate with MQTT
+- (optional) ncat if you want to transfer files from the node
 
+## Running the orchestrator
+
+The orchestrator takes the following arguments:
+
+```
+Usage: ./orchestrate.sh [OPTIONS]
+  -h, --help        Show this help message
+  -d, --debug       Enable debug mode
+  -p, --playbook    Specify playbook file (default: playbook)
+  -a, --ansible     use Ansible Playbook to deploy
+  -s, --ssh         use ssh to deploy
+  -m, --mqttserver  specify an MQTT Server
+  -t, --mqtttopic   specify an MQTT Topic
+```
+
+
+## MQTT implementation
+
+All messages are sent to the $MQTT_SERVER Server (as defined in global.config) on the topic $MQTT_TOPIC. You can override these with the -m and -t switch. Commands to the nodes are sent to $MQTT_TOPIC/<node>/COMMAND, and status messages are fed back by the node to $MQTT_TOPIC/<node>/STATUS.
+
+## Playbook Syntax
+
+The playbook is a simple text file that can have the following instructions:
+
+| Command                       | Purpose                                           |
+| ----------------------------- | ------------------------------------------------- |
+| `SEND <node> <message>`       | publishes a message to the node/COMMAND topic     |
+| `WAITFOR <node> <status>`     | Waits until the node publishes the desired status |
+| `WAIT <seconds>`              | Waits the number of seconds indicated             |
+| `RECEIVE <port> <filename>`   | Launches ncat to listen on `<port>` and writes  received data to `<filename>`                     |
+ 
+## Node commands and status codes
+
+When the node's client script is started, it publishes `ALIVE` as the node's status.
+
+By default, the node understands the following messages:
+| Message                       | Purpose                                           |
+| ----------------------------- | ------------------------------------------------- |
+| `START`                       | Launches the `function startFunction` in the node's `functions.sh` and submits the status code `STARTED` |
+| `STOP`                        | Launches the `function stopFunction` in the node's `functions.sh` and submits the status code `STOPPED` |
+| `TERMINATE`                   | Terminates the client script and submits the status code `TERMINATED` |
+| `SENDFILE <filename> <IPaddress> <port> [TRUNCATE]` | Uses ncat to connect to the indicated address and port. It will send the file `<filename>` over ncat and truncate the file to 0 if the last parameter is `TRUNCATE` |
