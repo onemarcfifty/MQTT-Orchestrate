@@ -5,3 +5,5 @@ group1/global.config
 group2/global.config
 test.txt
 ansible.cfg
+group3
+group4

@@ -24,7 +24,7 @@ function runPlayBook {
         # Use mosquitto_pub to publish the rest of the line
         subTopic="${words[1]}"
         message="${line#SEND $subTopic }"  # Remove the "SEND " prefix
-        mosquitto_pub -h $MQTT_SERVER -t "$MQTT_TOPIC/$subTopic/COMMAND" -m "$message"
+        mosquitto_pub -q 1 -h $MQTT_SERVER -t "$MQTT_TOPIC/$subTopic/COMMAND" -m "$message"
         ;;
       "WAIT")
         # Sleep for n seconds (n being the second word)
@@ -33,6 +33,7 @@ function runPlayBook {
         ;;
       "WAITFOR")
         # Wait for a status of the specified node
+        # Status messages will be retained, so no permanent listening required here
         subTopic="${words[1]}"
         expected_word="${words[2]}"
         message=""

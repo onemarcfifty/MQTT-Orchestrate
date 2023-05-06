@@ -5,7 +5,7 @@ WAITFOR node2 ALIVE
 # now we start iperf3 on node1 in Server mode
 # and on node2 in client mode for 5 secs
 SEND node1 START SERVER 5201
-SEND node2 START 127.0.0.1 5201 5 3
+SEND node2 START 127.0.0.1 5201 15 3
 WAIT 7
 # now we stop the tasks on both nodes
 SEND node2 STOP

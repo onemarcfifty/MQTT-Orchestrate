@@ -55,6 +55,7 @@ function action() {
     "TERMINATE")
       # Terminate the program when the line contains "TERMINATE"
       publish_mqtt "TERMINATED"
+      rm $fifo
       exit 0
       ;;
     *)
@@ -63,11 +64,15 @@ function action() {
   esac
 }
 
+fifo=mosquitto_sub_fifo$MY_TOPIC
+mkfifo $fifo
+mosquitto_sub -h $MQTT_SERVER -t $MQTT_TOPIC/$MY_TOPIC/COMMAND >$fifo &
+
 publish_mqtt "ALIVE"
 
 # infinite loop
 while true ; do
-  LINE=$(mosquitto_sub -h $MQTT_SERVER -t $MQTT_TOPIC/$MY_TOPIC/COMMAND -C 1 )
+  read LINE < $fifo
   echo "*** $LINE"
   action $LINE
 done
