@@ -24,7 +24,7 @@ function runPlayBook {
         # Use mosquitto_pub to publish the rest of the line
         subTopic="${words[1]}"
         message="${line#SEND $subTopic }"  # Remove the "SEND " prefix
-        mosquitto_pub -q 1 -h $MQTT_SERVER -t "$MQTT_TOPIC/$subTopic/COMMAND" -m "$message"
+        mosquitto_pub -q 2 -h $MQTT_SERVER -t "$MQTT_TOPIC/$subTopic/COMMAND" -m "$message"
         ;;
       "WAIT")
         # Sleep for n seconds (n being the second word)
