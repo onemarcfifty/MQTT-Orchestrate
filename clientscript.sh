@@ -17,7 +17,7 @@ MY_TOPIC=$1
 # publish_mqtt feeds back the current status into the STATUS subtopic
 # the status will be retained
 function publish_mqtt() {
-  mosquitto_pub -r -h $MQTT_SERVER -t $MQTT_TOPIC/$MY_TOPIC/STATUS -m "$1"
+  mosquitto_pub -q 2 -r -h $MQTT_SERVER -t $MQTT_TOPIC/$MY_TOPIC/STATUS -m "$1"
 }
 
 # SendFile is used to send a file using ncat to an arbitrary socket
@@ -40,6 +40,7 @@ function action() {
   shift
   case "$COMMAND" in
     "START")
+      publish_mqtt "PARAM-$1-$2-$3-$4-$5-$6-$7-$8"
       startFunction $@
       publish_mqtt "STARTED"
       ;;
@@ -55,6 +56,7 @@ function action() {
     "TERMINATE")
       # Terminate the program when the line contains "TERMINATE"
       publish_mqtt "TERMINATED"
+      killall mosquitto_sub
       rm $fifo
       exit 0
       ;;
@@ -67,7 +69,7 @@ function action() {
 fifo=mosquitto_sub_fifo$MY_TOPIC
 mkfifo $fifo
 mosquitto_sub -h $MQTT_SERVER -t $MQTT_TOPIC/$MY_TOPIC/COMMAND >$fifo &
-
+initFunction
 publish_mqtt "ALIVE"
 
 # infinite loop

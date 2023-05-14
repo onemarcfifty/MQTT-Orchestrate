@@ -8,3 +8,10 @@ function stopFunction() {
 #    kill `pidof iperf3`
     kill "$LAST_PID"
 }
+
+# Init function example: Kill all remaining iperf3 processes
+function initFunction() {
+    killall iperf3
+    LAST_PID=""
+    rm /tmp/iperf*.log
+}
